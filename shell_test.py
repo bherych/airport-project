@@ -4,19 +4,11 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'airport_project.settings')
 django.setup()
 
-from airlines.models import Airline
-from airplanes.models import Airplane
-from airports.models import Airport
-from countries.models import Country
-from flights.models import Flight
-from tickets.models import Ticket
+from airlines.models import Airline, Airplane, Airport, Country
+from flights.models import Flight, Ticket
 from users.models import User
-from airlines.serializers import AirlineSerializer
-from airplanes.serializers import AirplaneSerializer
-from airports.serializers import AirportSerializer
-from countries.serializers import CountrySerializer
-from flights.serializers import FlightSerializer
-from tickets.serializers import TicketSerializer
+from airlines.serializers import AirlineSerializer, AirplaneSerializer, AirportSerializer, CountrySerializer
+from flights.serializers import FlightSerializer, TicketSerializer
 from users.serializers import UserSerializer
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser

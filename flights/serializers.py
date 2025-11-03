@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Flight
+from .models import Flight, Ticket
 
 class FlightSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,3 +14,10 @@ class FlightSerializer(serializers.ModelSerializer):
             'airplane',
             'status',
         ]
+
+
+
+class TicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ['id', 'user', 'flight', 'status', 'created_at', 'updated_at']
