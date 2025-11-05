@@ -22,10 +22,10 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="My Project API",
+        title="airport_project API",
         default_version='v1',
-        description="Документація до API твого Django проекту",
-        contact=openapi.Contact(email="youremail@example.com"),
+        description="API documentation for the airport_project",
+        contact=openapi.Contact(email="mail@example.com"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny, ),
