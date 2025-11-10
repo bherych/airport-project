@@ -1,12 +1,7 @@
-from django.shortcuts import render
 from .models import User
 from .serializers import UserSerializer
-from rest_framework import generics
+from rest_framework import viewsets
 
-class UserListCreateView(generics.ListCreateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer

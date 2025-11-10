@@ -1,35 +1,19 @@
-from rest_framework import generics
 from .models import Airline, Airplane, Airport, Country
 from .serializers import AirlineSerializer, AirplaneSerializer, AirportSerializer, CountrySerializer
+from rest_framework import viewsets
 
-class AirlineListCreateView(generics.ListCreateAPIView):
+class AirlineViewSet(viewsets.ModelViewSet):
     queryset = Airline.objects.all()
     serializer_class = AirlineSerializer
 
-class AirplaneListCreateView(generics.ListCreateAPIView):
+class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.all()
     serializer_class = AirplaneSerializer
 
-class AirportListCreateView(generics.ListCreateAPIView):
+class AirportViewSet(viewsets.ModelViewSet):
     queryset = Airport.objects.all()
     serializer_class = AirportSerializer
 
-class CountryListCreateView(generics.ListCreateAPIView):
-    queryset = Country.objects.all()
-    serializer_class = CountrySerializer
-
-class AirlineDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Airline.objects.all()
-    serializer_class = AirlineSerializer
-
-class AirplaneDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Airplane.objects.all()
-    serializer_class = AirplaneSerializer
-
-class AirportDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Airport.objects.all()
-    serializer_class = AirportSerializer
-
-class CountryDetailView(generics.RetrieveUpdateDestroyAPIView):
+class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
