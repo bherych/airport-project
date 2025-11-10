@@ -29,6 +29,16 @@ from airlines.views import (
     AirportDetailView,
     CountryDetailView,
 )   
+from flights.views import (
+    FlightListCreateView,
+    FlightDetailView,
+    TicketListCreateView,
+    TicketDetailView,
+)
+from users.views import (
+    UserListCreateView,
+    UserDetailView,
+)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -48,4 +58,16 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('airlines/', AirlineListCreateView.as_view(), name='airline-list-create'),
     path('airlines/<int:pk>/', AirlineDetailView.as_view(), name='airline-detail'),
+    path('airplanes/', AirplaneListCreateView.as_view(), name='airplane-list-create'),
+    path('airplanes/<int:pk>/', AirplaneDetailView.as_view(), name='airplane-detail'),
+    path('airports/', AirportListCreateView.as_view(), name='airport-list-create'),
+    path('airports/<int:pk>/', AirportDetailView.as_view(), name='airport-detail'),
+    path('countries/', CountryListCreateView.as_view(), name='country-list-create'),
+    path('countries/<int:pk>/', CountryDetailView.as_view(), name='country-detail'),
+    path('flights/', FlightListCreateView.as_view(), name='flight-list-create'),
+    path('flights/<int:pk>/', FlightDetailView.as_view(), name='flight-detail'),
+    path('tickets/', TicketListCreateView.as_view(), name='ticket-list-create'),
+    path('tickets/<int:pk>/', TicketDetailView.as_view(), name='ticket-detail'),
+    path('users/', UserListCreateView.as_view(), name='user-list-create'),
+    path('users/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
 ]
