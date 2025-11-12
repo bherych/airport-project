@@ -17,24 +17,44 @@ class AirlineViewSet(viewsets.ModelViewSet):
     
 
     def list(self, request, *args, **kwargs):
-        logger.info("Got all airlines request")
-        return super().list(request, *args, **kwargs)
+        logger.info("Getting all airlines request")
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving airlines: {e}")
+            raise
 
     def retrieve(self, request, *args, **kwargs):
-        logger.info(f"Retrieved details of airline with id={kwargs.get('pk')}")
-        return super().retrieve(request, *args, **kwargs)
+        logger.info(f"Retrieving details of airline with id={kwargs.get('pk')}")
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving airline with id={kwargs.get('pk')}: {e}")
+            raise
 
     def create(self, request, *args, **kwargs):
-        logger.info(f"Created new airline: {request.data}")
-        return super().create(request, *args, **kwargs)
+        logger.info(f"Creating new airline: {request.data}")
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error creating airline: {e}")
+            raise
 
     def update(self, request, *args, **kwargs):
         logger.info(f"Updating airline with id={kwargs.get('pk')}: {request.data}")
-        return super().update(request, *args, **kwargs)
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error updating airline with id={kwargs.get('pk')}: {e}")
+            raise
 
     def destroy(self, request, *args, **kwargs):
         logger.warning(f"Deleted airline with id={kwargs.get('pk')}")
-        return super().destroy(request, *args, **kwargs)
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error deleting airline with id={kwargs.get('pk')}: {e}")
+            raise
 
 class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.all()
@@ -44,24 +64,44 @@ class AirplaneViewSet(viewsets.ModelViewSet):
     filterset_fields = AirplaneFilter
 
     def list(self, request, *args, **kwargs):
-        logger.info("Got all airplane request")
-        return super().list(request, *args, **kwargs)
+        logger.info("Getting all airplane request")
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving airplanes: {e}")
+            raise
 
     def retrieve(self, request, *args, **kwargs):
-        logger.info(f"Retrieved details of airplane with id={kwargs.get('pk')}")
-        return super().retrieve(request, *args, **kwargs)
+        logger.info(f"Retrieving details of airplane with id={kwargs.get('pk')}")
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving airplane with id={kwargs.get('pk')}: {e}")
+            raise
 
     def create(self, request, *args, **kwargs):
-        logger.info(f"Created new airplane: {request.data}")
-        return super().create(request, *args, **kwargs)
+        logger.info(f"Creating new airplane: {request.data}")
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error creating airplane: {e}")
+            raise
 
     def update(self, request, *args, **kwargs):
         logger.info(f"Updating airplane with id={kwargs.get('pk')}: {request.data}")
-        return super().update(request, *args, **kwargs)
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error updating airplane with id={kwargs.get('pk')}: {e}")
+            raise
 
     def destroy(self, request, *args, **kwargs):
-        logger.warning(f"Deleted airplane with id={kwargs.get('pk')}")
-        return super().destroy(request, *args, **kwargs)
+        logger.warning(f"Deleting airplane with id={kwargs.get('pk')}")
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error deleting airplane with id={kwargs.get('pk')}: {e}")
+            raise
 
 class AirportViewSet(viewsets.ModelViewSet):
     queryset = Airport.objects.all()
@@ -71,24 +111,44 @@ class AirportViewSet(viewsets.ModelViewSet):
     filterset_fields = ['name', 'city', 'country']
 
     def list(self, request, *args, **kwargs):
-        logger.info("Got all airport request")
-        return super().list(request, *args, **kwargs)
+        logger.info("Getting all airport request")
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving airports: {e}")
+            raise
 
     def retrieve(self, request, *args, **kwargs):
-        logger.info(f"Retrieved details of airport with id={kwargs.get('pk')}")
-        return super().retrieve(request, *args, **kwargs)
+        logger.info(f"Retrieving details of airport with id={kwargs.get('pk')}")
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving airport with id={kwargs.get('pk')}: {e}")
+            raise
 
     def create(self, request, *args, **kwargs):
-        logger.info(f"Created new airport: {request.data}")
-        return super().create(request, *args, **kwargs)
+        logger.info(f"Creating new airport: {request.data}")
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error creating airport: {e}")
+            raise
 
     def update(self, request, *args, **kwargs):
         logger.info(f"Updating airport with id={kwargs.get('pk')}: {request.data}")
-        return super().update(request, *args, **kwargs)
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error updating airport with id={kwargs.get('pk')}: {e}")
+            raise
 
     def destroy(self, request, *args, **kwargs):
-        logger.warning(f"Deleted airport with id={kwargs.get('pk')}")
-        return super().destroy(request, *args, **kwargs)
+        logger.warning(f"Deleting airport with id={kwargs.get('pk')}")
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error deleting airport with id={kwargs.get('pk')}: {e}")
+            raise
 
 class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
@@ -98,21 +158,41 @@ class CountryViewSet(viewsets.ModelViewSet):
     filterset_fields = ['name', 'code']
 
     def list(self, request, *args, **kwargs):
-        logger.info("Got all countries request")
-        return super().list(request, *args, **kwargs)
+        logger.info("Getting all countries request")
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving countries: {e}")
+            raise
 
     def retrieve(self, request, *args, **kwargs):
-        logger.info(f"Retrieved details of country with id={kwargs.get('pk')}")
-        return super().retrieve(request, *args, **kwargs)
+        logger.info(f"Retrieving details of country with id={kwargs.get('pk')}")
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving country with id={kwargs.get('pk')}: {e}")
+            raise
 
     def create(self, request, *args, **kwargs):
-        logger.info(f"Created new country: {request.data}")
-        return super().create(request, *args, **kwargs)
+        logger.info(f"Creating new country: {request.data}")
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error creating country: {e}")
+            raise
 
     def update(self, request, *args, **kwargs):
         logger.info(f"Updating country with id={kwargs.get('pk')}: {request.data}")
-        return super().update(request, *args, **kwargs)
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error updating country with id={kwargs.get('pk')}: {e}")
+            raise
 
     def destroy(self, request, *args, **kwargs):
-        logger.warning(f"Deleted country with id={kwargs.get('pk')}")
-        return super().destroy(request, *args, **kwargs)
+        logger.warning(f"Deleting country with id={kwargs.get('pk')}")
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error deleting country with id={kwargs.get('pk')}: {e}")
+            raise
