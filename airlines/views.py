@@ -3,7 +3,8 @@ from .serializers import AirlineSerializer, AirplaneSerializer, AirportSerialize
 from rest_framework import viewsets
 import logging
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import AirplaneFilter
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +12,9 @@ class AirlineViewSet(viewsets.ModelViewSet):
     queryset = Airline.objects.all()
     serializer_class = AirlineSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name', 'country']
+    
 
     def list(self, request, *args, **kwargs):
         logger.info("Got all airlines request")
@@ -36,6 +40,8 @@ class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.all()
     serializer_class = AirplaneSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = AirplaneFilter
 
     def list(self, request, *args, **kwargs):
         logger.info("Got all airplane request")
@@ -61,6 +67,8 @@ class AirportViewSet(viewsets.ModelViewSet):
     queryset = Airport.objects.all()
     serializer_class = AirportSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name', 'city', 'country']
 
     def list(self, request, *args, **kwargs):
         logger.info("Got all airport request")
@@ -86,6 +94,8 @@ class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['name', 'code']
 
     def list(self, request, *args, **kwargs):
         logger.info("Got all countries request")
