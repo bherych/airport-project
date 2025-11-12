@@ -1,6 +1,5 @@
-from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from views import (
+from .views import (
     FlightViewSet,
     TicketViewSet,
 )
@@ -10,6 +9,4 @@ router.register(r"flights", FlightViewSet, basename="flight")
 router.register(r"tickets", TicketViewSet, basename="ticket")
 
 
-urlpatterns = [
-    path("", include(router.urls)),
-]
+urlpatterns = router.urls

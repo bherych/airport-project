@@ -2,12 +2,15 @@ from .models import Airline, Airplane, Airport, Country
 from .serializers import AirlineSerializer, AirplaneSerializer, AirportSerializer, CountrySerializer
 from rest_framework import viewsets
 import logging
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 logger = logging.getLogger(__name__)
 
 class AirlineViewSet(viewsets.ModelViewSet):
     queryset = Airline.objects.all()
     serializer_class = AirlineSerializer
+    permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
         logger.info("Got all airlines request")
@@ -32,6 +35,7 @@ class AirlineViewSet(viewsets.ModelViewSet):
 class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.all()
     serializer_class = AirplaneSerializer
+    permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
         logger.info("Got all airplane request")
@@ -56,6 +60,7 @@ class AirplaneViewSet(viewsets.ModelViewSet):
 class AirportViewSet(viewsets.ModelViewSet):
     queryset = Airport.objects.all()
     serializer_class = AirportSerializer
+    permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
         logger.info("Got all airport request")
@@ -80,6 +85,7 @@ class AirportViewSet(viewsets.ModelViewSet):
 class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
+    permission_classes = [IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
         logger.info("Got all countries request")
