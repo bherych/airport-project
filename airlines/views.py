@@ -13,7 +13,7 @@ class AirlineViewSet(viewsets.ModelViewSet):
     serializer_class = AirlineSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['name', 'country']
+    filterset_fields = ['name', 'code']
     
 
     def list(self, request, *args, **kwargs):
