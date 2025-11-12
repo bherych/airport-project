@@ -61,7 +61,7 @@ class AirplaneViewSet(viewsets.ModelViewSet):
     serializer_class = AirplaneSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = AirplaneFilter
+    filterset_class = AirplaneFilter
 
     def list(self, request, *args, **kwargs):
         logger.info("Getting all airplane request")

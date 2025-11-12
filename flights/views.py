@@ -10,11 +10,11 @@ from .filters import FlightFilter
 logger = logging.getLogger(__name__)
 
 class FlightViewSet(viewsets.ModelViewSet):
-    queryset = Flight.objects.all()
+    queryset = Flight.objects.all().order_by('id')
     serializer_class = FlightSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
-    filter_class = FlightFilter
+    filterset_class = FlightFilter
 
     def list(self, request, *args, **kwargs):
         logger.info("Getting all flight request")
