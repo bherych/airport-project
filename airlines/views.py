@@ -2,17 +2,16 @@ from .models import Airline, Airplane, Airport, Country
 from .serializers import AirlineSerializer, AirplaneSerializer, AirportSerializer, CountrySerializer
 from rest_framework import viewsets
 import logging
-from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import AirplaneFilter
-from .permissions import ReadOnlyOrIsAuthenticated
+from .permissions import ReadOnlyOrIsAdmin
 
 logger = logging.getLogger(__name__)
 
 class AirlineViewSet(viewsets.ModelViewSet):
     queryset = Airline.objects.all()
     serializer_class = AirlineSerializer
-    permission_classes = [ReadOnlyOrIsAuthenticated]
+    permission_classes = [ReadOnlyOrIsAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['name', 'code']
     
@@ -60,7 +59,7 @@ class AirlineViewSet(viewsets.ModelViewSet):
 class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.all()
     serializer_class = AirplaneSerializer
-    permission_classes = [ReadOnlyOrIsAuthenticated]
+    permission_classes = [ReadOnlyOrIsAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_class = AirplaneFilter
 
@@ -107,7 +106,7 @@ class AirplaneViewSet(viewsets.ModelViewSet):
 class AirportViewSet(viewsets.ModelViewSet):
     queryset = Airport.objects.all()
     serializer_class = AirportSerializer
-    permission_classes = [ReadOnlyOrIsAuthenticated]
+    permission_classes = [ReadOnlyOrIsAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['name', 'city', 'country']
 
@@ -154,7 +153,7 @@ class AirportViewSet(viewsets.ModelViewSet):
 class CountryViewSet(viewsets.ModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
-    permission_classes = [ReadOnlyOrIsAuthenticated]
+    permission_classes = [ReadOnlyOrIsAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['name', 'code']
 
