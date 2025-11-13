@@ -1,6 +1,7 @@
 from django.db import models
 from airlines.models import Airplane, Airport
 from users.models import User
+from orders.models import Order
 
 class Flight(models.Model):
 
@@ -26,14 +27,19 @@ class Flight(models.Model):
 
 class Ticket(models.Model):
     class Status(models.TextChoices):
+        AVAILABLE = 'available', 'Available'
         BOOKED = 'booked', 'Booked'
         CANCELLED = 'cancelled', 'Cancelled'
         CHECKED_IN = 'used', 'Used'
     
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='tickets')
     # Should use PROTECT to avoid deleting flights with tickets but for testing purposese I leave it as CASCADE
     flight = models.ForeignKey(Flight, on_delete=models.CASCADE, related_name='tickets')
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.BOOKED)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.AVAILABLE)
+    seat_number = models.CharField(max_length=5, null=True, blank=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

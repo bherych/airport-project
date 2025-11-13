@@ -63,6 +63,14 @@ class TicketViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'user', 'flight']
 
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return Ticket.objects.all()
+        return Ticket.objects.filter(passenger=user)
+        
+
     def list(self, request, *args, **kwargs):
         logger.info("Getting all tickets request")
         try:
