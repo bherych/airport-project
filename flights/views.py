@@ -5,6 +5,7 @@ import logging
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import FlightFilter
+from airlines.permissions import ReadOnlyOrIsAuthenticated, IsOwnerOrAdmin
 
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 class FlightViewSet(viewsets.ModelViewSet):
     queryset = Flight.objects.all().order_by('id')
     serializer_class = FlightSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [ReadOnlyOrIsAuthenticated]
     filter_backends = [DjangoFilterBackend]
     filterset_class = FlightFilter
 
@@ -59,7 +60,7 @@ class FlightViewSet(viewsets.ModelViewSet):
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all()
     serializer_class = TicketSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsOwnerOrAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'user', 'flight']
 

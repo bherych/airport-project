@@ -46,4 +46,5 @@ urlpatterns = [
     path('', include('users.urls')),
     path('', include('airlines.urls')),
     path('', include('flights.urls')),
+    path('', include('orders.urls')),
 ]

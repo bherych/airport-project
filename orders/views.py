@@ -2,14 +2,15 @@ from .models import Order, Transaction
 from .serializers import OrderSerializer, TransactionSerializer
 from rest_framework import viewsets
 import logging
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from airlines.permissions import IsOwnerOrAdmin
 from django_filters.rest_framework import DjangoFilterBackend
 
 logger = logging.getLogger(__name__)
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'user']
 
@@ -65,7 +66,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUser]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'user', 'order']
 
