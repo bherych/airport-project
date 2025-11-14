@@ -4,7 +4,7 @@ from rest_framework import viewsets
 import logging
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import AirplaneFilter
-from .permissions import ReadOnlyOrIsAdmin
+from airport_project.permissions import ReadOnlyOrIsAdmin
 
 logger = logging.getLogger(__name__)
 

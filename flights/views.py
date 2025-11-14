@@ -5,7 +5,7 @@ import logging
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from .filters import FlightFilter
-from airlines.permissions import ReadOnlyOrIsAdmin, IsOwnerOrAdmin
+from airport_project.permissions import ReadOnlyOrIsAdmin, IsOwnerOrAdmin
 
 
 logger = logging.getLogger(__name__)

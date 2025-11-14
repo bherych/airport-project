@@ -3,7 +3,7 @@ from .serializers import OrderSerializer, TransactionSerializer
 from rest_framework import viewsets
 import logging
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from airlines.permissions import IsOwnerOrAdmin
+from airport_project.permissions import IsOwnerOrAdmin
 from django_filters.rest_framework import DjangoFilterBackend
 
 logger = logging.getLogger(__name__)

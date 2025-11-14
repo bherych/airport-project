@@ -5,7 +5,7 @@ import logging
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
-from airlines.permissions import IsOwnerOrAdmin
+from airport_project.permissions import IsOwnerOrAdmin
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +14,12 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['username', 'country', 'is_active', 'is_staff']
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return User.objects.all()
+        return User.objects.filter(id=user.id)
 
     def get_permissions(self):
         if self.action == 'create':
