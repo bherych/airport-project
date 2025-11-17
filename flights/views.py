@@ -1,5 +1,5 @@
-from .models import Flight, Ticket
-from .serializers import FlightSerializer, TicketSerializer
+from .models import Flight, Ticket, Seat
+from .serializers import FlightSerializer, TicketSerializer, SeatSerializer
 from rest_framework import viewsets
 import logging
 from rest_framework.permissions import IsAuthenticated
@@ -110,4 +110,51 @@ class TicketViewSet(viewsets.ModelViewSet):
             return super().destroy(request, *args, **kwargs)
         except Exception as e:
             logger.error(f"Error deleting ticket with id={kwargs.get('pk')}: {e}")
+            raise
+
+class SeatViewSet(viewsets.ModelViewSet):
+    queryset = Seat.objects.all()
+    serializer_class = SeatSerializer
+    permission_classes = [ReadOnlyOrIsAdmin]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['flight', 'is_available']
+
+    def list(self, request, *args, **kwargs):
+        logger.info("Getting all seats request")
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving seats: {e}")
+            raise
+
+    def retrieve(self, request, *args, **kwargs):
+        logger.info(f"Retrieving details of seat with id={kwargs.get('pk')}")
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error retrieving seat with id={kwargs.get('pk')}: {e}")
+            raise
+
+    def create(self, request, *args, **kwargs):
+        logger.info(f"Creating new seat: {request.data}")
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error creating seat: {e}")
+            raise
+
+    def update(self, request, *args, **kwargs):
+        logger.info(f"Updating seat with id={kwargs.get('pk')}: {request.data}")
+        try:
+            return super().update(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error updating seat with id={kwargs.get('pk')}: {e}")
+            raise
+
+    def destroy(self, request, *args, **kwargs):
+        logger.warning(f"Deleted seat with id={kwargs.get('pk')}")
+        try:
+            return super().destroy(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error deleting seat with id={kwargs.get('pk')}: {e}")
             raise

@@ -1,5 +1,5 @@
 from django.db import models
-from users.models import User
+from django.conf import settings
 
 class Order(models.Model):
 
@@ -9,12 +9,12 @@ class Order(models.Model):
         CANCELLED = 'cancelled', 'Cancelled'
     
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def total_price(self):
+    def get_total_price(self):
         return sum(ticket.price for ticket in self.tickets.all())
 
     def __str__(self):
@@ -27,7 +27,7 @@ class Transaction(models.Model):
         PENDING = 'pending', 'Pending'
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='transactions')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='transactions')
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     transaction_id = models.CharField(max_length=100, unique=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)

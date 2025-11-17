@@ -29,7 +29,11 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'rattiest-phototelegraphically-thomasina.ngrok-free.dev',
+]
 
 
 # Application definition
@@ -94,6 +98,12 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT'),    
     }
 }
+
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+
+AUTH_USER_MODEL = 'users.User'
 
 
 # Password validation
