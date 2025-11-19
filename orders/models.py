@@ -7,6 +7,7 @@ class Order(models.Model):
         PENDING = 'pending', 'Pending'
         COMPLETED = 'paid', 'Paid'
         CANCELLED = 'cancelled', 'Cancelled'
+        EXPIRED = 'expired', 'Expired'
     
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')

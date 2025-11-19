@@ -10,6 +10,7 @@ from rest_framework import viewsets
 from flights.models import Flight, Seat, Ticket
 import os
 from django.conf import settings
+import time
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -181,6 +182,7 @@ class BuyTicketView(APIView):
             success_url=DOMAIN + "/success?order_id=" + str(order.id),
             cancel_url=DOMAIN + "/cancel?order_id=" + str(order.id),
             metadata={"order_id": order.id},
+            expires_at=int(time.time()) + 1800
         )
 
         return Response({"checkout_url": session.url})
@@ -204,18 +206,39 @@ class StrideWebhookView(APIView):
             return Response(status=400)
         except stripe.SignatureVerificationError:
             return Response(status=400)
+        
+        order = Order.objects.get(id=order_id)
+        tickets = order.tickets.all()
+        flight = ticket[0].flight
 
         if event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
 
             order_id = session["metadata"]["order_id"]
-            order = Order.objects.get(id=order_id)
+            
             order.status = "paid"
             order.save()
 
-            tickets = order.tickets.all()
             for ticket in tickets:
                 ticket.status = "booked"
                 ticket.save()
+
+        elif event['type'] == 'checkout.session.expired':
+            session = event['data']['object']
+            order_id = session['metadata']['order_id']
+            order.status = 'expired'
+            order.save()
+
+            for ticket in tickets:
+                ticket.status = "cancelled"
+                ticket.save()
+                
+            seat_numbers = [ticket.seat_number for ticket in tickets]
+            seats = Seat.objects.filter(flight=flight, seat_number__in= seat_numbers)
+            
+            for seat in seats:
+                seat.is_available = True
+                seat.save()
+                
 
         return Response(status=200)
