@@ -11,6 +11,8 @@ from flights.models import Flight, Seat, Ticket
 import os
 from django.conf import settings
 import time
+from orders.utils import send_ticket_email
+from django.http import HttpResponse
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -179,11 +181,20 @@ class BuyTicketView(APIView):
                 }
             ],
             mode="payment",
-            success_url=DOMAIN + "/success?order_id=" + str(order.id),
-            cancel_url=DOMAIN + "/cancel?order_id=" + str(order.id),
+            success_url=DOMAIN + "stripe/webhook/success?order_id=" + str(order.id),
+            cancel_url=DOMAIN + "stripe/webhook/cancel?order_id=" + str(order.id),
             metadata={"order_id": order.id},
             expires_at=int(time.time()) + 1800
         )
+        Transaction.objects.create(
+            order=order,
+            user=user,
+            status=Transaction.Status.PENDING,
+            transaction_id=session.id,
+            amount=total_price
+        )
+
+
 
         return Response({"checkout_url": session.url})
 
@@ -197,35 +208,43 @@ class StrideWebhookView(APIView):
             return Response({"error": "Missing signature"}, status=400)
         event = None
 
-
         try:
             event = stripe.Webhook.construct_event(
                 payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
             )
-        except ValueError:
-            return Response(status=400)
-        except stripe.SignatureVerificationError:
-            return Response(status=400)
+        except ValueError as e:
+            logger.error(f"Value error {e}")
+            return Response(status=200)
+        except stripe.SignatureVerificationError as e:
+            logger.error(f"Signature error {e}")
+            return Response(status=200)
         
+        session = event['data']['object']
+        order_id = session['metadata']['order_id']
         order = Order.objects.get(id=order_id)
+        transaction = Transaction.objects.get(transaction_id=session.id)
+        if transaction.status == transaction.Status.SUCCESS:
+            logger.info(f"Already succesful transaction with id={transaction.id}")
+            return Response(status=200)
+        
         tickets = order.tickets.all()
-        flight = ticket[0].flight
+        flight = tickets[0].flight
 
         if event["type"] == "checkout.session.completed":
-            session = event["data"]["object"]
-
-            order_id = session["metadata"]["order_id"]
-            
+            transaction.status = Transaction.Status.SUCCESS
+            transaction.save()
             order.status = "paid"
             order.save()
+            
+            send_ticket_email(order, tickets)
 
             for ticket in tickets:
                 ticket.status = "booked"
                 ticket.save()
 
         elif event['type'] == 'checkout.session.expired':
-            session = event['data']['object']
-            order_id = session['metadata']['order_id']
+            transaction.status = Transaction.Status.FAILED
+            transaction.save()
             order.status = 'expired'
             order.save()
 
@@ -234,11 +253,19 @@ class StrideWebhookView(APIView):
                 ticket.save()
                 
             seat_numbers = [ticket.seat_number for ticket in tickets]
-            seats = Seat.objects.filter(flight=flight, seat_number__in= seat_numbers)
+            seats = Seat.objects.filter(flight=flight, seat_number__in=seat_numbers)
             
             for seat in seats:
                 seat.is_available = True
                 seat.save()
                 
-
         return Response(status=200)
+    
+
+def payment_success(request):
+    order_id = request.GET.get('order_id')
+    return HttpResponse(f"Оплата успішна! Order ID: {order_id}")
+
+def payment_cancel(request):
+    order_id = request.GET.get('order_id')
+    return HttpResponse(f"Оплата скасована. Order ID: {order_id}")
