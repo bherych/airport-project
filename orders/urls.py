@@ -18,7 +18,7 @@ router.register(r"transactions", TransactionViewSet, basename="transaction")
 urlpatterns = [
     path("buy-ticket/", BuyTicketView.as_view(), name="buy-ticket"),
     path("stripe/webhook/", StrideWebhookView.as_view(), name="stripe-webhook"),
-    path('success', payment_success, name='payment-success'),
-    path('cancel', payment_cancel, name='payment-cancel'),
+    path("stripe/webhook/success/", payment_success, name="payment-success"),
+    path("stripe/webhook/cancel/", payment_cancel, name="payment-cancel"),
     path("", include(router.urls)),
 ]
