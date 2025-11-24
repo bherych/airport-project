@@ -1,0 +1,15 @@
+<h2>Your Tickets</h2>
+
+<p>Order ID: {{ order.id }}</p>
+
+<ul>
+{% for t in tickets %}
+    <li>
+        Flight: {{ t.flight.id }} <br>
+        Seat: {{ t.seat.seat_number }} <br>
+        Price: {{ t.price }}
+    </li>
+{% endfor %}
+</ul>
+
+<p>Thank you for choosing us!</p>
