@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  web:
+    build: .
+    container_name: django_airport
+    command: >
+      sh -c "
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      gunicorn airport_project.wsgi:application --bind 0.0.0.0:8000
+      "
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+    
+      DB_HOST: db
+      DB_NAME: airport_db
+      DB_USER: postgres
+      DB_PASSWORD: Calculator-2021
+
+  db:
+    image: postgres:15
+    container_name: airport_postgres
+    environment:
+      POSTGRES_DB: airport_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Calculator-2021
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
