@@ -69,7 +69,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return Ticket.objects.all()
-        return Ticket.objects.filter(passenger=user)
+        return Ticket.objects.filter(user=user)
 
     def create(self, request, *args, **kwargs):
         if not request.user.is_staff:
