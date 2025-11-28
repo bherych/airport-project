@@ -18,20 +18,23 @@ services:
       - "8000:8000"
     depends_on:
       - db
+    env_file:
+      - airport_project/.env
     environment:
-    
-      DB_HOST: db
-      DB_NAME: airport_db
-      DB_USER: postgres
-      DB_PASSWORD: Calculator-2021
+      - DB_HOST
+      - DB_NAME
+      - DB_USER
+      - DB_PASSWORD
 
   db:
     image: postgres:15
     container_name: airport_postgres
+    env_file:
+      - airport_project/.env
     environment:
-      POSTGRES_DB: airport_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Calculator-2021
+      - DB_NAME
+      - DB_USER
+      - DB_PASSWORD
     ports:
       - "5432:5432"
     volumes:
