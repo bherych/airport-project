@@ -1,0 +1,24 @@
+<div id="messages"></div>
+
+<input id="message-input" type="text">
+<button id="send-btn">Send</button>
+
+<script>
+    const chatSocket = new WebSocket(
+        "ws://" + window.location.host + "/ws/chat/"
+    );
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const messages = document.getElementById("messages");
+        messages.innerHTML += `<p><b>AI:</b> ${data.message}</p>`;
+    };
+
+    document.getElementById("send-btn").onclick = function() {
+        const input = document.getElementById("message-input");
+        chatSocket.send(JSON.stringify({
+            "message": input.value
+        }));
+        input.value = "";
+    };
+</script>

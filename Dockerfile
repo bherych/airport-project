@@ -16,4 +16,4 @@ COPY . .
 
 RUN python manage.py collectstatic --noinput
 
-CMD ["gunicorn", "airport_project.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["daphne", "airport_project.asgi:application", "-b", "0.0.0.0", "-p", "8000"]
