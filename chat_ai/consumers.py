@@ -36,7 +36,7 @@ class ChatAIConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.system_prompt = load_system_prompt()
         await self.accept()
-        await self.send(json.dumps({"sender": "ai", "message": "Привіт! Мене звати Василій, я твій віртуальний помічник."}))
+        await self.send(json.dumps({"sender": "ai", "message": "Hello! My name is Vasyl. I'm your virtual assistant."}))
 
     async def receive(self, text_data):
         data = json.loads(text_data)
@@ -53,7 +53,7 @@ class ChatAIConsumer(AsyncWebsocketConsumer):
             client = Groq(api_key=os.getenv("GROQ_API_KEY"))
             loop = asyncio.get_event_loop()
 
-            response = await loop.run_in_executor(
+            first_response = await loop.run_in_executor(
                 None,
                 lambda: client.chat.completions.create(
                     model="llama-3.1-8b-instant",
@@ -64,18 +64,34 @@ class ChatAIConsumer(AsyncWebsocketConsumer):
                 )
             )
 
-            msg = response.choices[0].message.content
+            first_msg = first_response.choices[0].message.content
 
             try:
-                data = json.loads(msg)
+                data = json.loads(first_msg)
                 if data.get("action") == "get_flights":
-                    flights = await get_flights()
                     
-                    return json.dumps(flights, ensure_ascii=False)
+                    flights = await get_flights()
+
+                    second_response = await loop.run_in_executor(
+                        None,
+                        lambda: client.chat.completions.create(
+                            model="llama-3.1-8b-instant",
+                            messages=[
+                                {"role": "system", "content": self.system_prompt},
+                                {"role": "user", "content": prompt},
+                                {"role": "assistant", "content": first_msg},
+                                {"role": "function", "name": "get_flights", "content": json.dumps(flights, ensure_ascii=False)},
+                            ],
+                        )
+                    )
+
+                    return second_response.choices[0].message.content
+
             except:
                 pass
 
-            return msg
+            return first_msg
 
         except Exception as e:
             return f"Error: {str(e)}"
+
