@@ -9,16 +9,28 @@ import google.generativeai as genai
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 @sync_to_async
-def get_flights(filter_value):
+def get_flights(params):
     from flights.models import Flight
     flights = Flight.objects.select_related(
         "departure_airport", "arrival_airport", "airplane"
     )
 
-    if filter_value == "scheduled":
-        flights = flights.filter(status="scheduled")
-    elif filter_value == "cancelled":
-        flights = flights.filter(status="cancelled")
+    status = params.get("status")
+    if status:
+        flights = flights.filter(status=status)
+
+    date = params.get("date")
+    if date:
+        flights = flights.filter(departure_time__date=date)
+
+
+    departure_city = params.get("departure_city")
+    if departure_city:
+        flights = flights.filter(departure_airport__name__icontains=departure_city)
+
+    arrival_city = params.get("arrival_city")
+    if arrival_city:
+        flights = flights.filter(arrival_airport__name__icontains=arrival_city)
 
     data = []
     for f in flights:
@@ -33,6 +45,7 @@ def get_flights(filter_value):
             "price": float(f.price) if f.price is not None else None,
         })
     return data
+
 
 
 def load_system_prompt():
@@ -55,13 +68,16 @@ class ChatAIConsumer(AsyncWebsocketConsumer):
                     "function_declarations": [
                         {
                             "name": "get_flights",
-                            "description": "Get flights with an optional filter.",
+                            "description": "Get flights with optional filters",
                             "parameters": {
                                 "type": "object",
                                 "properties": {
-                                    "filter": {
+                                    "date": {"type": "string"},
+                                    "departure_city": {"type": "string"},
+                                    "arrival_city": {"type": "string"},
+                                    "status": {
                                         "type": "string",
-                                        "enum": ["all", "scheduled", "cancelled"]
+                                        "enum": ["scheduled", "cancelled"]
                                     }
                                 }
                             }
@@ -98,10 +114,10 @@ class ChatAIConsumer(AsyncWebsocketConsumer):
                     for p in parts:
                         if hasattr(p, "function_call") and p.function_call:
                             fn = p.function_call
-                            args = fn.args or {}
+                            args = dict(fn.args) if fn.args else {}
 
                             if fn.name == "get_flights":
-                                flights = await get_flights(args.get("filter", "scheduled"))
+                                flights = await get_flights(args)
 
                                 final = await loop.run_in_executor(
                                     None,
