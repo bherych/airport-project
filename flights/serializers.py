@@ -13,6 +13,7 @@ class FlightSerializer(serializers.ModelSerializer):
             'arrival_time',
             'airplane',
             'status',
+            "price",
         ]
 
 

@@ -2,25 +2,35 @@ import json
 import os
 import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
-from groq import Groq
+from google.generativeai import GenerativeModel
 from asgiref.sync import sync_to_async
+import google.generativeai as genai
 
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 @sync_to_async
-def get_flights():
+def get_flights(filter_value):
     from flights.models import Flight
-    flights = Flight.objects.select_related("departure_airport", "arrival_airport", "airplane").all()
+    flights = Flight.objects.select_related(
+        "departure_airport", "arrival_airport", "airplane"
+    )
+
+    if filter_value == "scheduled":
+        flights = flights.filter(status="scheduled")
+    elif filter_value == "cancelled":
+        flights = flights.filter(status="cancelled")
 
     data = []
     for f in flights:
         data.append({
             "flight_number": f.flight_number,
             "departure_airport": f.departure_airport.name,
-            "arrival_airport": f.arrival_airport.name,  
+            "arrival_airport": f.arrival_airport.name,
             "departure_time": f.departure_time.isoformat(),
             "arrival_time": f.arrival_time.isoformat(),
             "airplane": f.airplane.model if f.airplane else None,
             "status": f.status,
+            "price": float(f.price) if f.price is not None else None,
         })
     return data
 
@@ -38,60 +48,75 @@ class ChatAIConsumer(AsyncWebsocketConsumer):
         await self.accept()
         await self.send(json.dumps({"sender": "ai", "message": "Hello! My name is Vasyl. I'm your virtual assistant."}))
 
+        self.model = GenerativeModel(
+            model_name="gemini-2.5-flash",
+            tools = [
+                {
+                    "function_declarations": [
+                        {
+                            "name": "get_flights",
+                            "description": "Get flights with an optional filter.",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {
+                                    "filter": {
+                                        "type": "string",
+                                        "enum": ["all", "scheduled", "cancelled"]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            ],
+            system_instruction=self.system_prompt
+        )
+
     async def receive(self, text_data):
         data = json.loads(text_data)
         user_msg = data.get("message")
 
         await self.send(json.dumps({"sender": "user", "message": user_msg}))
 
-        answer = await self.ask_groq(user_msg)
+        answer = await self.ask_gemini(user_msg)
 
         await self.send(json.dumps({"sender": "ai", "message": answer}))
 
-    async def ask_groq(self, prompt: str):
+
+    async def ask_gemini(self, prompt: str):
         try:
-            client = Groq(api_key=os.getenv("GROQ_API_KEY"))
             loop = asyncio.get_event_loop()
 
-            first_response = await loop.run_in_executor(
+            response = await loop.run_in_executor(
                 None,
-                lambda: client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
-                    messages=[
-                        {"role": "system", "content": self.system_prompt},
-                        {"role": "user", "content": prompt},
-                    ],
-                )
+                lambda: self.model.generate_content(prompt)
             )
 
-            first_msg = first_response.choices[0].message.content
-
             try:
-                data = json.loads(first_msg)
-                if data.get("action") == "get_flights":
-                    
-                    flights = await get_flights()
+                if response.candidates:
+                    parts = response.candidates[0].content.parts
+                    for p in parts:
+                        if hasattr(p, "function_call") and p.function_call:
+                            fn = p.function_call
+                            args = fn.args or {}
 
-                    second_response = await loop.run_in_executor(
-                        None,
-                        lambda: client.chat.completions.create(
-                            model="llama-3.1-8b-instant",
-                            messages=[
-                                {"role": "system", "content": self.system_prompt},
-                                {"role": "user", "content": prompt},
-                                {"role": "assistant", "content": first_msg},
-                                {"role": "function", "name": "get_flights", "content": json.dumps(flights, ensure_ascii=False)},
-                            ],
-                        )
-                    )
+                            if fn.name == "get_flights":
+                                flights = await get_flights(args.get("filter", "scheduled"))
 
-                    return second_response.choices[0].message.content
+                                final = await loop.run_in_executor(
+                                    None,
+                                    lambda: self.model.generate_content(
+                                        f"Here is the flight data:\n"
+                                        f"{json.dumps(flights, ensure_ascii=False)}\n"
+                                        f"Respond naturally."
+                                    )
+                                )
 
-            except:
-                pass
+                                return final.text or "No response from model."
+            except Exception as inner_err:
+                return f"Function error: {inner_err}"
 
-            return first_msg
+            return response.text or "No response."
 
         except Exception as e:
             return f"Error: {str(e)}"
-
