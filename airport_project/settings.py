@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     'airlines',
     'flights',
     'orders',
+    'channels',
+    'chat_ai',
 ]
 
 MIDDLEWARE = [
@@ -219,3 +221,14 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+ASGI_APPLICATION = "airport_project.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}

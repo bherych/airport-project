@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Airport AI Chat — Василій</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1720;
+      --muted:#8b98a6;
+      --accent:#7c5cff;
+      --user:#0ea5a4;
+      --ai:#2b3945;
+      --bubble-user:#05373a;
+      --bubble-ai:#111827;
+      --glass: rgba(255,255,255,0.03);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#071018 90%);color:#e6eef6}
+    .app{
+      max-width:900px;margin:32px auto;height:calc(100vh - 64px);display:flex;flex-direction:column;gap:16px;padding:18px;border-radius:12px;box-shadow:0 10px 40px rgba(2,6,23,0.7);background:linear-gradient(180deg,var(--panel),rgba(10,14,18,0.6));border:1px solid rgba(255,255,255,0.03);
+    }
+    header{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3ec5ff);display:flex;align-items:center;justify-content:center;font-weight:700;color:#071018}
+    h1{font-size:18px;margin:0}
+    .sub{color:var(--muted);font-size:13px}
+
+    .chat-area{flex:1;overflow:auto;padding:18px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);backdrop-filter:blur(6px)}
+    .messages{display:flex;flex-direction:column;gap:12px;max-width:100%}
+
+    .message{display:inline-block;max-width:78%;padding:12px 14px;border-radius:12px;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}
+    .message.user{align-self:flex-end;background:linear-gradient(180deg,var(--bubble-user),#064848);color:#dff7f6;border-bottom-right-radius:4px}
+    .message.ai{align-self:flex-start;background:linear-gradient(180deg,var(--bubble-ai),#0b1220);color:#dfe7ee;border-bottom-left-radius:4px}
+
+    .meta{font-size:11px;color:var(--muted);margin-top:6px}
+
+    .composer{display:flex;gap:12px;align-items:flex-end;padding:12px;background:transparent}
+    .input-wrap{flex:1;position:relative}
+    textarea#message-input{width:100%;min-height:44px;max-height:160px;resize:none;border-radius:10px;padding:12px 46px 12px 14px;background:var(--glass);border:1px solid rgba(255,255,255,0.03);color:inherit;font-size:14px;outline:none}
+    .send-btn{position:absolute;right:8px;bottom:8px;border-radius:8px;padding:8px 12px;background:linear-gradient(90deg,var(--accent),#4bd1ff);border:none;color:#071018;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(124,92,255,0.16)}
+    .send-btn:active{transform:translateY(1px)}
+
+    .small{font-size:12px;color:var(--muted)}
+
+    .typing-dot{display:inline-block;width:6px;height:6px;margin:0 2px;border-radius:50%;background:var(--muted);opacity:0.8}
+
+    .chat-area::-webkit-scrollbar{width:10px}
+    .chat-area::-webkit-scrollbar-thumb{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:10px}
+
+    @media (max-width:640px){.app{margin:10px;padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="app" role="application">
+    <header>
+      <div class="logo">VA</div>
+      <div>
+        <h1>Vasyl — Airport Assistant</h1>
+        <div class="sub">Ask about flights, times, and other airport info</div>
+      </div>
+    </header>
+
+    <main class="chat-area" id="chatArea" aria-live="polite">
+      <div class="messages" id="messages"></div>
+    </main>
+
+    <div class="composer">
+      <div class="input-wrap">
+        <textarea id="message-input" placeholder="Type a message — Enter to send, Shift+Enter for newline"></textarea>
+        <button id="sendBtn" class="send-btn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    const messagesEl = document.getElementById('messages');
+    const input = document.getElementById('message-input');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatArea = document.getElementById('chatArea');
+
+    const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const ws = new WebSocket(scheme + '://' + window.location.host + '/ws/chat/');
+
+    ws.addEventListener('open', () => {
+      appendSystem('Connected to AI');
+    });
+
+    ws.addEventListener('close', () => {
+      appendSystem('Disconnected');
+    });
+
+    ws.addEventListener('message', (ev) => {
+      try{
+        const data = JSON.parse(ev.data);
+        const sender = data.sender || 'ai';
+        const text = data.message || '';     
+        if(sender === 'ai') appendAIAnimated(text);
+        else appendSystem(text);
+      }catch(e){
+        appendSystem('Malformed message');
+      }
+    });
+
+    function appendSystem(text){
+      const el = document.createElement('div');
+      el.className = 'small';
+      el.style.opacity = 0.8;
+      el.style.margin = '6px 0';
+      el.textContent = text;
+      messagesEl.appendChild(el);
+      scrollToBottom();
+    }
+
+    function appendUser(text){
+      const bubble = document.createElement('div');
+      bubble.className = 'message user';
+      bubble.innerHTML = escapeHtml(text);
+      messagesEl.appendChild(bubble);
+      scrollToBottom();
+    }
+
+    async function appendAIAnimated(text){
+      const container = document.createElement('div');
+      container.className = 'message ai';
+      messagesEl.appendChild(container);
+      scrollToBottom();
+
+      const cursor = document.createElement('span');
+      cursor.className = 'typing-dot';
+      cursor.style.marginLeft = '6px';
+
+      let plaintext = text;
+      try{
+        const j = JSON.parse(text);
+        if(Array.isArray(j)){
+          if(j.length === 0){ plaintext = 'I don\'t see any scheduled flights right now.'; }
+          else{
+            let lines = ['I see the following flights:'];
+            j.forEach(f => {
+              const dep = f.departure_airport || f.departure || 'Unknown';
+              const arr = f.arrival_airport || f.arrival || 'Unknown';
+              const num = f.flight_number || f.id || '';
+              const dt = f.departure_time ? new Date(f.departure_time).toLocaleString() : 'unknown time';
+              lines.push(`Flight ${num} — ${dep} → ${arr} at ${dt} (${f.status || 'status unknown'})`);
+            });
+            plaintext = lines.join('\n');
+          }
+        }
+      }catch(e){ }
+
+      await typeText(container, plaintext);
+      scrollToBottom();
+    }
+
+    function typeText(targetEl, text){
+      return new Promise(resolve => {
+        const speed = 18;
+        let i = 0;
+        targetEl.textContent = '';
+        function step(){
+          if(i >= text.length){ resolve(); return; }
+          const next = text[i++];
+          targetEl.textContent += next;
+          scrollToBottom();
+          if(next === '\n') setTimeout(step, speed * 6);
+          else setTimeout(step, speed);
+        }
+        step();
+      });
+    }
+
+    function scrollToBottom(){
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function sendMessage(){
+      const text = input.value.trim();
+      if(!text) return;
+      appendUser(text);
+      ws.send(JSON.stringify({message: text}));
+      input.value = '';
+      input.style.height = '';
+      input.focus();
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    input.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = (input.scrollHeight) + 'px';
+      scrollToBottom();
+    });
+
+    appendSystem('Ready');
+  </script>
+</body>
+</html>

@@ -47,4 +47,5 @@ urlpatterns = [
     path('', include('airlines.urls')),
     path('', include('flights.urls')),
     path('', include('orders.urls')),
+    path('', include('chat_ai.urls'))
 ]
