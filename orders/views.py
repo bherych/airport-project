@@ -6,8 +6,9 @@ import stripe
 from airport_project.permissions import IsOwnerOrAdmin
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView, Response
-from rest_framework import viewsets
-from flights.models import Flight, Seat, Ticket
+from rest_framework import viewsets, status
+from rest_framework.exceptions import ValidationError
+from flights.models import Seat, Ticket
 import os
 from django.conf import settings
 import time
@@ -51,12 +52,51 @@ class OrderViewSet(viewsets.ModelViewSet):
             raise
 
     def create(self, request, *args, **kwargs):
-        logger.info(f"User {request.user.id} creating new order: {request.data}")
-        try:
-            return super().create(request, *args, **kwargs)
-        except Exception as e:
-            logger.error(f"Error creating order for user {request.user.id}: {e}")
-            raise
+        seats = request.data.get("seats")
+        flight_id = request.data.get("flight")
+
+        if not seats:
+            raise ValidationError("Seats are required.")
+
+        if not flight_id:
+            raise ValidationError("Flight is required.")
+
+        order = Order.objects.create(
+            user=request.user,
+            total_price=0
+        )
+
+        total = 0
+
+        for seat_number in seats:
+            try:
+                seat = Seat.objects.get(flight_id=flight_id, seat_number=seat_number)
+            except Seat.DoesNotExist:
+                order.delete()
+                raise ValidationError(f"Seat {seat_number} does not exist")
+
+            if not seat.is_available:
+                order.delete()
+                raise ValidationError(f"Seat {seat_number} is already booked")
+
+            seat.is_available = False
+            seat.save()
+
+            ticket = Ticket.objects.create(
+                user=request.user,
+                flight_id=flight_id,
+                order=order,
+                seat_number=seat_number,
+                price=seat.flight.price,
+                status=Ticket.Status.BOOKED
+            )
+
+            total += ticket.price
+
+        order.total_price = total
+        order.save()
+
+        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         logger.info(f"User {request.user.id} updating order {kwargs.get('pk')}: {request.data}")
@@ -126,46 +166,26 @@ class BuyTicketView(APIView):
 
     def post(self, request):
         user = request.user
-        flight_id = request.data.get("flight")
-        seat_numbers = request.data.get("seats", [])
+        order_id = request.data.get("order_id")
 
-        if not isinstance(seat_numbers, list):
-            seat_numbers = [seat_numbers]
+        if not order_id:
+            return Response({"error": "order_id is required"}, status=400)
 
-        flight = Flight.objects.get(id=flight_id)
+        try:
+            order = Order.objects.get(id=order_id, user=user)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=404)
 
-        seats = Seat.objects.filter(
-            flight=flight,
-            seat_number__in=seat_numbers,
-            is_available=True
-        )
+        if order.status != "pending":
+            return Response({"error": "Order is not pending"}, status=400)
 
-        if seats.count() != len(seat_numbers):
-            return Response(
-                {"error": "One or more seats are not available"},
-                status=400
-            )
+        tickets = order.tickets.all()
 
-        total_price = flight.price * len(seat_numbers)
+        if not tickets.exists():
+            return Response({"error": "Order has no tickets"}, status=400)
 
-        order = Order.objects.create(
-            user=user,
-            status="pending",
-            total_price=total_price
-        )
+        flight = tickets[0].flight
 
-        tickets = []
-        for seat in seats:
-            ticket = Ticket.objects.create(
-                user=user,
-                flight=flight,
-                seat_number=seat.seat_number,
-                price=flight.price,
-                order=order
-            )
-            tickets.append(ticket)
-            seat.is_available = False
-            seat.save()
 
         DOMAIN = os.getenv("DOMAIN", "http://localhost:8000")
 
@@ -177,7 +197,7 @@ class BuyTicketView(APIView):
                         "product_data": {"name": f"Flight {flight.id}"},
                         "unit_amount": int(flight.price * 100),
                     },
-                    "quantity": len(seats),
+                    "quantity": len(tickets),
                 }
             ],
             mode="payment",
@@ -186,15 +206,14 @@ class BuyTicketView(APIView):
             metadata={"order_id": order.id},
             expires_at=int(time.time()) + 1800
         )
+
         Transaction.objects.create(
             order=order,
             user=user,
             status=Transaction.Status.PENDING,
             transaction_id=session.id,
-            amount=total_price
+            amount=order.total_price
         )
-
-
 
         return Response({"checkout_url": session.url})
 
